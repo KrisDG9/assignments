@@ -121,10 +121,32 @@ forbes_q4 <- forbes_q2 %>%
 #Plot the differences per country with a bar chart. 
 #Make sure the labels of the countries are readable.
 
+forbes_q5 <- summarise(forbes_q4, dif_nw = dif_nw[1])
+
+ggplot(forbes_q5) +
+  geom_bar(mapping = aes(x = reorder(country, desc(country)), y = dif_nw/1e+09), stat = "identity") +
+  xlab("Country") +
+  ylab("Difference in net worth (Billion $)") +
+  ggtitle("Difference highest vs. lowest Forbes members") +
+  theme(plot.title = element_text(size = 8)) +
+  theme(text = element_text(size = 8), axis.text.x = element_text(angle = 45, hjust = 1, size = 7)) +
+  theme(text = element_text(size = 8), axis.text.y = element_text(angle = 0, hjust = 1, size = 5)) + 
+  coord_flip()
+
 # q6 ----------------------------------------------------------------------
 
 #You sorted the countries on difference in the data, but the graph is not sorted like that.
 #Update the plot so countries are shown sorted by difference and give proper axis labels.
+
+ggplot(forbes_q5) +
+  geom_bar(mapping = aes(x = reorder(country, dif_nw), y = dif_nw/1e+09), stat = "identity") +
+  xlab("Country") +
+  ylab("Difference in net worth (Billion $)") +
+  ggtitle("Difference highest vs. lowest Forbes members") +
+  theme(plot.title = element_text(size = 8)) +
+  theme(text = element_text(size = 8), axis.text.x = element_text(angle = 45, hjust = 1, size = 7)) +
+  theme(text = element_text(size = 8), axis.text.y = element_text(angle = 0, hjust = 1, size = 5)) + 
+  coord_flip()
 
 # q7 ----------------------------------------------------------------------
 
