@@ -152,6 +152,8 @@ ggplot(forbes_q5) +
 
 #Are there persons with the same rank in this list? If so, which ranks are shared?
 
+sum(table(forbes_q4$rank) != 1) #There are 19 shared ranks (but we don't know the constellation yet).
+
 forbes_q7 <- forbes_q4 %>%
   group_by(rank) %>%
   filter(n() > 1) %>%
@@ -175,6 +177,12 @@ forbes_q7
 #Compute for each original rank also the average rank. 
 #So, if 4 people have rank 7, they are actually at rank 7,8,9, and 10, so their average rank is 8.5. 
 #Your output should contain one column with the original ranks and another column with the newly computed average_rank values.
+
+forbes_q8 <- forbes_q7 %>%
+  mutate(average_rank = (rank + (rank + shared_by - 1)) / 2) %>%
+  select(rank, average_rank)
+
+print.data.frame(forbes_q8)
 
 # q9 ----------------------------------------------------------------------
 
