@@ -60,6 +60,51 @@ tail(forbes_q2, 10) #Additional check confirms that the filter was succesful.
 #Does it help to plot age against log(net_worth) instead? 
 #Add your answer as a comment to the code.
 
+ggplot(forbes_q2, aes(x = age, y = net_worth)) + 
+  geom_point(size = 0.8) + 
+  theme_bw() +
+  xlab("Age") +
+  ylab("Net Worth") + 
+  ggtitle("Scatter plot age against net worth") +
+  theme(plot.title = element_text(size = 10, face = "bold")) +
+  theme(text = element_text(size = 10), axis.text.x = element_text(angle = 0, hjust = 1, size = 10)) +
+  theme(text = element_text(size = 10), axis.text.y = element_text(angle = 0, hjust = 1, size = 10))
+
+#Most sample pps have < 2 billion, so it is difficult to distinguish any pattern.
+
+ggplot(forbes_q2, aes(x = age, y = log(net_worth))) + 
+  geom_point(size = 0.8) + 
+  theme_bw() +
+  xlab("Age") +
+  ylab("Net Worth") +
+  ggtitle("Scatter plot age against log of net worth") +
+  theme(plot.title = element_text(size = 10, face = "bold")) +
+  theme(text = element_text(size = 10), axis.text.x = element_text(angle = 0, hjust = 1, size = 10)) +
+  theme(text = element_text(size = 10), axis.text.y = element_text(angle = 0, hjust = 1, size = 10))
+
+#Already clearer when using a log, so yes, that helps. There seems to be a weak positive relationship.
+
+#We can further examine this relationship by adding a line to the plot.
+
+ggplot(forbes_q2, aes(x = age, y = log(net_worth))) +
+  geom_point(size = 0.8) +
+  geom_smooth(size = 0.7, se = FALSE, colour = 2) + 
+  theme_bw() +
+  xlab("Age") +
+  ylab("Net Worth") +
+  ggtitle("Scatter plot age against log of net worth") +
+  theme(plot.title = element_text(size = 10, face = "bold")) +
+  theme(text = element_text(size = 10), axis.text.x = element_text(angle = 0, hjust = 1, size = 10)) +
+  theme(text = element_text(size = 10), axis.text.y = element_text(angle = 0, hjust = 1, size = 10))
+
+#This confirms that the relationship is not that strong, probably around r = .10.
+
+#Let's check the exact correlation:
+
+cor.test(forbes_q2$age, forbes_q2$net_worth) 
+
+#Indeed the correlation is small: r = .09.
+
 # q4 ----------------------------------------------------------------------
 
 #Compute for each country the difference between the net worth of the highest and lowest person on the list. 
