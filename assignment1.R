@@ -46,6 +46,14 @@ str(forbes_q1c) #Now rank has no hashtag; net_worth has no dollar sign or letter
 #However, these numbers can influence the analysis results, 
 #so remove everyone with a net_worth of less than 1 Billion from the data set.
 
+message('Lowest net worth before filter: ', min(forbes_q1c$net_worth)) #This is below 1 B.
+
+forbes_q2 <- filter(forbes_q1c, net_worth >= 1000000000)
+
+message('Lowest net worth after filter: ', min(forbes_q2$net_worth)) #This is 1 B.
+
+tail(forbes_q2, 10) #Additional check confirms that the filter was succesful.
+
 # q3 ----------------------------------------------------------------------
 
 #Plot the age against net_worth. Is there are pattern? 
