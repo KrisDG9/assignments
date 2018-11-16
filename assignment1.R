@@ -152,6 +152,23 @@ ggplot(forbes_q5) +
 
 #Are there persons with the same rank in this list? If so, which ranks are shared?
 
+forbes_q7 <- forbes_q4 %>%
+  group_by(rank) %>%
+  filter(n() > 1) %>%
+  summarise(shared_by = n())
+
+forbes_q7
+
+#Output shows that there are indeed shared ranks.
+
+#Ranks that appear twice: 6, 27, 143, 160, 212, 301, 323, 365, 404, 422, 427, 434, 476, 503, and 507.
+
+#Ranks that appear three times: 192 and 395.
+
+#Ranks that appear four times: 451 and 566.
+
+#Note that since we removed pps from the list in the previous questions, some ranks are also missing.
+
 # q8 ----------------------------------------------------------------------
 
 #The ranks are computed as min_rank. 
