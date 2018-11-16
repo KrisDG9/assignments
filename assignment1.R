@@ -14,6 +14,32 @@ library(tidyverse)
 #Read the forbes.csv data file and make sure you assign appropriate column types 
 #(in particular, you need rank, net_worth, and age to be numeric and not character)
 
+forbes_q1a <- read.csv("forbes.csv", header = TRUE, colClasses = c(age = "numeric"), na.strings = "-", fileEncoding="UTF-8-BOM")
+
+str(forbes_q1a) #Age is numeric (as specified), but rank and net_worth still need to be modified.
+
+as_tibble(forbes_q1a) #Second check also shows that rank and net_worth are indexed as factors.
+
+forbes_q1b <- as_tibble(forbes_q1a) #Let's put these data in a tibble anyway for tidy purposes.
+
+#Let's then create a function for net_worth modification.
+
+nwf <- function(nw) {
+  v <- unlist(strsplit(str_sub(nw, 2), split = " ", fixed = TRUE))
+  n <- as.double(v[1])
+  x <- ifelse(v[2]=="B", n * 1000000000, n * 1000000)
+  return(x)
+}
+
+#Then use that function to do modifications on net_worth (and at the same time modify rank).
+
+forbes_q1c <- forbes_q1b %>%
+  mutate(rank = as.integer(str_sub(rank, 2))) %>%
+  rowwise() %>%
+  mutate(net_worth = nwf(net_worth))
+
+str(forbes_q1c) #Now rank has no hashtag; net_worth has no dollar sign or letter. Both are numeric.
+
 # q2 ----------------------------------------------------------------------
 
 #The bottom end of the list contains people with less than 1 Billion. 
