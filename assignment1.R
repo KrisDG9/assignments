@@ -110,6 +110,12 @@ cor.test(forbes_q2$age, forbes_q2$net_worth)
 #Compute for each country the difference between the net worth of the highest and lowest person on the list. 
 #Filter out countries with less than 6 persons on the list and sort by ascending difference.
 
+forbes_q4 <- forbes_q2 %>%
+  group_by(country) %>%
+  filter(n() >= 6) %>%
+  mutate(dif_nw = max(net_worth) - min(net_worth)) %>%
+  arrange(dif_nw)
+
 # q5 ----------------------------------------------------------------------
 
 #Plot the differences per country with a bar chart. 
