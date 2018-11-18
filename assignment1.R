@@ -2,9 +2,11 @@
 
 rm(list = ls())
 
+library(countrycode)
 library(dplyr)
 library(ggplot2)
 library(lintr)
+library(RColorBrewer)
 library(rworldmap)
 library(tibble)
 library(tidyverse)
@@ -188,3 +190,55 @@ print.data.frame(forbes_q8)
 
 #Plot the sum of net_worth per country on the world map. 
 #Use a logarithmic scale for clarity.
+
+#Calculate sum scores (I used all countries here, so also the ones with < 6 observations).
+
+forbes_q9 <- forbes_q2 %>%
+  group_by(country) %>%
+  mutate(sum_nw = sum(net_worth)) %>%
+  arrange(country)
+
+forbes_q9 <- summarise(forbes_q9, sum_nw = sum_nw[1])
+
+#Add a column with the log of sum_nw.
+
+forbes_q9$log_sum_nw <- with(forbes_q9, log(sum_nw))
+
+#Transform country names into iso3c codes.
+
+?codelist
+
+forbes_q9$iso3 <- with(forbes_q9, countrycode(forbes_q9$country, 
+                                                "country.name", 
+                                                "iso3c", warn = TRUE, 
+                                                nomatch = NA,
+                                                custom_dict = NULL, 
+                                                custom_match = NULL, 
+                                                origin_regex = FALSE)
+                        )
+
+#Join the data to a country.
+
+vignette('rworldmap')
+
+datamapping <- joinCountryData2Map(forbes_q9, 
+                                   joinCode = "ISO3",
+                                   nameJoinColumn = "iso3",
+                                   verbose = TRUE
+                                   ) #Polynesia is NA so it couldn't match an ISO3 code to that one.
+
+#Display the map.
+
+par(mai=c(0,0,0.2,0),xaxs="i",yaxs="i")
+
+mapCountryData(datamapping, 
+               nameColumnToPlot = "log_sum_nw", 
+               mapTitle = "Total (log) net worth of billionaires",
+               catMethod = "logFixedWidth", 
+               numCats = 250,
+               colourPalette = colorRampPalette(brewer.pal(9, "BuPu"))(250),
+               oceanCol = "aliceblue",
+               missingCountryCol = "gray71",
+               borderCol = "black",
+               addLegend = TRUE
+               )
