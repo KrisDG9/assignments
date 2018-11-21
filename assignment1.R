@@ -33,7 +33,7 @@ nwf <- function(nw) {
   return(x)
 }
 
-#Then use that function to do modifications on net_worth (and at the same time modify rank).
+#Then use that function to do modifications on net_worth and rank.
 
 forbes_q1c <- forbes_q1b %>%
   mutate(rank = as.integer(str_sub(rank, 2))) %>%
@@ -78,7 +78,7 @@ ggplot(forbes_q2, aes(x = age, y = log(net_worth))) +
   geom_point(size = 0.8) + 
   theme_bw() +
   xlab("Age") +
-  ylab("Net Worth") +
+  ylab("Net Worth (log)") +
   ggtitle("Scatter plot age against log of net worth") +
   theme(plot.title = element_text(size = 10, face = "bold")) +
   theme(text = element_text(size = 10), axis.text.x = element_text(angle = 0, hjust = 1, size = 10)) +
@@ -93,7 +93,7 @@ ggplot(forbes_q2, aes(x = age, y = log(net_worth))) +
   geom_smooth(size = 0.7, se = FALSE, colour = 2) + 
   theme_bw() +
   xlab("Age") +
-  ylab("Net Worth") +
+  ylab("Net Worth (log)") +
   ggtitle("Scatter plot age against log of net worth") +
   theme(plot.title = element_text(size = 10, face = "bold")) +
   theme(text = element_text(size = 10), axis.text.x = element_text(angle = 0, hjust = 1, size = 10)) +
@@ -130,9 +130,9 @@ ggplot(forbes_q5) +
   xlab("Country") +
   ylab("Difference in net worth (Billion $)") +
   ggtitle("Difference highest vs. lowest Forbes members") +
-  theme(plot.title = element_text(size = 8)) +
-  theme(text = element_text(size = 8), axis.text.x = element_text(angle = 45, hjust = 1, size = 7)) +
-  theme(text = element_text(size = 8), axis.text.y = element_text(angle = 0, hjust = 1, size = 5)) + 
+  theme(plot.title = element_text(size = 8, face = "bold")) +
+  theme(text = element_text(size = 8), axis.text.x = element_text(hjust = 1, size = 7)) +
+  theme(text = element_text(size = 8), axis.text.y = element_text(hjust = 1, size = 5)) + 
   coord_flip()
 
 # q6 ----------------------------------------------------------------------
@@ -145,7 +145,7 @@ ggplot(forbes_q5) +
   xlab("Country") +
   ylab("Difference in net worth (Billion $)") +
   ggtitle("Difference highest vs. lowest Forbes members") +
-  theme(plot.title = element_text(size = 8)) +
+  theme(plot.title = element_text(size = 8, face = "bold")) +
   theme(text = element_text(size = 8), axis.text.x = element_text(angle = 45, hjust = 1, size = 7)) +
   theme(text = element_text(size = 8), axis.text.y = element_text(angle = 0, hjust = 1, size = 5)) + 
   coord_flip()
@@ -184,14 +184,14 @@ forbes_q8 <- forbes_q7 %>%
   mutate(average_rank = (rank + (rank + shared_by - 1)) / 2) %>%
   select(rank, average_rank)
 
-print.data.frame(forbes_q8)
+print.data.frame(forbes_q8) #Output with original ranks (1st column) and average ranks (2nd column).
 
 # q9 ----------------------------------------------------------------------
 
 #Plot the sum of net_worth per country on the world map. 
 #Use a logarithmic scale for clarity.
 
-#Calculate sum scores (I used all countries here, so also the ones with < 6 observations).
+#Calculate sum scores (I only used billionaires here, but used all countries, so also those with < 6 observations).
 
 forbes_q9 <- forbes_q2 %>%
   group_by(country) %>%
@@ -215,7 +215,7 @@ forbes_q9$iso3 <- with(forbes_q9, countrycode(forbes_q9$country,
                                                 custom_dict = NULL, 
                                                 custom_match = NULL, 
                                                 origin_regex = FALSE)
-                        )
+                        ) #Couldn't match Polynesia.
 
 #Join the data to a country.
 
@@ -225,7 +225,7 @@ datamapping <- joinCountryData2Map(forbes_q9,
                                    joinCode = "ISO3",
                                    nameJoinColumn = "iso3",
                                    verbose = TRUE
-                                   ) #Polynesia is NA so it couldn't match an ISO3 code to that one.
+                                   ) #Polynesia is NA so it couldn't be joined.
 
 #Display the map.
 
