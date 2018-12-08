@@ -21,6 +21,28 @@ library(tidyverse)
 
 # Function:
 
+#' Tidy gathering
+#'
+#' @param Data
+#' @param Column_prefix 
+#'
+#' @return Implicitly returns the result of the gather operation.
+#' @export No
+#'
+#' @examples
+#' df <- data_frame(id = c(1,2,3,4,5), 
+#' var = c("a","d","g","f","i"), 
+#' a1 = c(3,5,1,2,2), 
+#' b1 = c(2,4,1,2,3), 
+#' a2 = c(8,1,2,5,1), 
+#' b2 = c(1,6,4,7,2), 
+#' a3 = c(7,7,2,3,1), 
+#' b3 = c(1,1,4,9,6))
+#' 
+#' tidy_df(df, "a")
+#' 
+#' @section Warning: This function was created by an R novice.
+
 tidy_df <- function(data, column_prefix = "var"){
   gather(data, starts_with(column_prefix), key = "variable", value = "value")
 }
@@ -53,8 +75,7 @@ tidy_df(df, "a")
 
 #' Get the Jane Austen data
 #'
-#' It will attempt to install the right package for you. If it does not work,
-#'   try to install it manually.
+#' It will attempt to install the right package for you. If it does not work, try to install it manually.
 #'
 #' @return A data frame with Jane Austen texts, one line per row
 
@@ -73,11 +94,19 @@ get_jane_austen_data()
 
 # extract_possible_names 
 
+#' Name extraction
+#'
+#' @param Data 
+#' @param Regex
+#'
+#' @return Implicitly returns extracted names.
+#' @export No
+
 extract_possible_names <- function(data, reg) {
   data %>%
     rename(text_id = id) %>%                      # text_id is the id from the original df to link back
     mutate(name = str_extract_all(text, reg)) %>% # extract (capitalised words)
-    unnest(name) %>%                              # replacement of tidy_df
+    unnest(name) %>%                              # shorter replacement of tidy_df
     mutate(id = row_number()) %>%                 # adding the unique identifier
     select(id, text_id, name, title)              # keep the title (needed in q4)
 }
@@ -98,6 +127,13 @@ possible_names
 # Keep only names that appear capitalised at least 75% of the time.
 
 # filter_names
+
+#' Name filter
+#'
+#' @param Data
+#'
+#' @return Implicitly returns filtered extracted names.
+#' @export No
 
 filter_names <- function(possible) {
   
@@ -134,10 +170,17 @@ names
 
 # count_names_per_book
 
+#' Name counter
+#'
+#' @param Data 
+#'
+#' @return Implicitly returns grouped and summarised names.
+#' @export No
+
 count_names_per_book <- function(names_list) {
   names_list %>%
-    group_by(title) %>%
-    summarise(unique_names = length(unique(name)), name_occurrences = n()) 
+    group_by(title) %>%                                                     # do everything per book
+    summarise(unique_names = length(unique(name)), name_occurrences = n())  # count the occurences
 }
 
 names_per_book <- count_names_per_book(names)
@@ -145,7 +188,8 @@ names_per_book <- count_names_per_book(names)
 names_per_book
 
 # Prelim answer: One could now state that "The Complete Project Gutenberg Works of Jane Austen" wins.
-# It contains the highest number of unique names (1146) and contains the most occurrences of names (37745).
+# It contains the highest number of unique names (1146).
+# It also contains the most occurrences of names (37745).
 # This is however cheating given that it is a collection of all Austen's works.
 # Therefore: disregard works that are not real books.
 
