@@ -101,7 +101,7 @@ possible_names
 
 filter_names <- function(possible) {
   
-  freqs <- readRDS(austen_word_freqs, refhook = NULL)
+  freqs <- readRDS("austen_word_freqs.Rds", refhook = NULL)
   
   filtered_summary <- possible %>%
     mutate(name_lower = tolower(name)) %>%                # names to lowercase, because freqs is lowercase
@@ -115,28 +115,48 @@ filter_names <- function(possible) {
 
 names <- filter_names(possible_names)
 
-names # comment on output (both obs diff between names and possible_names and by eyeballing the data [bijv. maanden, sir, etc.]) and stating that the q4 approach is therefore not optimal [maybe suggest improvement])
+names 
+
+# Note:
+  # The suggested filtering only solved some of the problems.
+  # For example, words like Persuasion are now removed.
+  # But names of geographical locations (e.g. Somersetshire), titles (e.g. Sir), and months (e.g. July) are not.
+  # This will negatively impact the final answers in q4.
 
 # Question 4 ------------------------------------------------------------------------------------------------------
 
+# Which book by Jane Austen contains the highest number of unique names? And which
+# book contains the most occurrences of names? Use your list of names from the
+# previous assignment. Answer this question by creating a function called
+# count_names_per_book which returns a data frame with a column containing the book
+# titles (title), a column with the number of unique names per book (unique_names), and
+# a column with total number of name occurrences per book (name_occurrences).
+
 # count_names_per_book
+
 count_names_per_book <- function(names_list) {
   names_list %>%
-    group_by(title) %>% # alle operaties per boek
-    summarise(unique_names = length(unique(name)), name_occurrences = n()) # optional after this: filter out non-books
+    group_by(title) %>%
+    summarise(unique_names = length(unique(name)), name_occurrences = n()) 
 }
 
 names_per_book <- count_names_per_book(names)
+
 names_per_book
 
-max_unique_names <- which.max(names_per_book$unique_names[1:8]) # limit to 'real' books here?
-paste0('Book with most unique names: ', names_per_book$title[max_unique_names], ' (', names_per_book$unique_names[max_unique_names], ')')
+# Prelim answer: One could now state that "The Complete Project Gutenberg Works of Jane Austen" wins.
+# It contains the highest number of unique names (1146) and contains the most occurrences of names (37745).
+# This is however cheating given that it is a collection of all Austen's works.
+# Therefore: disregard works that are not real books.
+
+# Book with the highest number of unique names:
 
 max_unique_names <- names_per_book[which.max(names_per_book$unique_names[1:8]),]
-paste0('Book with most unique names: ', max_unique_names$title, ' (', max_unique_names$unique_names, ')')
 
-max_name_occurrences <- which.max(names_per_book$name_occurrences[1:8])
-paste0('Book with most name occurrences: ', names_per_book$title[max_name_occurrences], ' (', names_per_book$name_occurrences[max_name_occurrences], ')')
+paste0("Book with most unique names: ", max_unique_names$title, " (", max_unique_names$unique_names, ")")
+
+# Book with the most occurrences of names:
 
 max_name_occurrences <- names_per_book[which.max(names_per_book$name_occurrences[1:8]),]
-paste0('Book with most name occurrences: ', max_name_occurrences$title, ' (', max_name_occurrences$name_occurrences, ')')
+
+paste0("Book with most name occurrences: ", max_name_occurrences$title, " (", max_name_occurrences$name_occurrences, ")")
