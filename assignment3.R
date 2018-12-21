@@ -1,14 +1,26 @@
+#assignment3
 
+# In this assignment we will be scraping the CIA World Factbook. Some code, including XPath
+# query info, is provided to get you up to speed. The focus will be on generalizing your code
+# and using functions with iteration.
 
-# The R file already contains the XPath queries necessary to do this assignment 
-# as this is not something I want you to get stuck on. Still, it will be helpful 
-# to have a look at the given urls for visual reference to what you are actually scraping.
+# In most cases you can answer the question by providing the code that will give the answer.
+# If a textual answer is required, add it as a comment to the code. You will be graded on
+# correctness as well as proper style (check https://style.tidyverse.org/).
 
+# Development hint: Try your functions on a selection of URLs first, instead of on all of them.
+# Downloading the information for all countries will take some time and this will slow down
+# your development process. Only test on all of them when it works for, say, 10 countries or so.
 
 library(tidyverse)
 library(xml2)
 library(RCurl)
+
 base_url <- "https://www.cia.gov/library/publications/the-world-factbook/"
+
+# Question 1 --------------------------------------------------------------
+
+
 
 
 #' Question 1: Get Population Ranking
