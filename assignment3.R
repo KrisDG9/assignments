@@ -12,6 +12,9 @@
 # Downloading the information for all countries will take some time and this will slow down
 # your development process. Only test on all of them when it works for, say, 10 countries or so.
 
+rm(list = ls())
+
+library(plyr)
 library(dplyr)
 library(RCurl)
 library(tidyr)
@@ -31,10 +34,34 @@ base_url <- "https://www.cia.gov/library/publications/the-world-factbook/"
 
 #' Question 1: Get Population Ranking
 #'
-#' @return
-#' @export
+#' @return Tibble with 4 added columns: country_link, country, population, and rank.population.
 #'
 #' @examples
+#' 
+#' get_population_ranking <- function() {
+#'   xpath_expressions <- c("country_link" = "//td[@class='region']/a/@@href",
+#'                          "country" = "//td[@class='region']/a",
+#'                          "value" = "//tr/td[3]",
+#'                          "rank" = "//tr/td[1]")
+#'   url = str_c(base_url, "fields/335rank.html")
+#'   raw_html <- read_html(getURL(url, .encoding = "UTF-8"))
+#'   
+#'   results <- list()
+#'   
+#'   for (nm in names(xpath_expressions)) {
+#'     results[[nm]] <- raw_html %>%
+#'       xml_find_all(xpath_expressions[nm]) %>%
+#'       as_list() %>% unlist()
+#'   }
+#'   
+#'   results %>%
+#'   as_tibble() %>%
+#'     rename(population = value) %>%
+#'     rename(rank.population = rank) %>%
+#'     mutate(country_link = str_replace_all(country_link, "\\.\\./", ""))
+#' }
+#' 
+#' get_population_ranking()
 
 get_population_ranking <- function() {
   xpath_expressions <- c("country_link" = "//td[@class='region']/a/@href",
@@ -44,21 +71,22 @@ get_population_ranking <- function() {
   url = str_c(base_url, "fields/335rank.html")
   raw_html <- read_html(getURL(url, .encoding = "UTF-8"))
   
-  results <- as.tibble(matrix(nrow = 238, ncol = 0))
+  results <- list()
   
   for (nm in names(xpath_expressions)) {
-    results[nm] <- raw_html %>%
+    results[[nm]] <- raw_html %>%
       xml_find_all(xpath_expressions[nm]) %>%
       as_list() %>% unlist()
   }
   
   results %>%
+    as_tibble() %>%
     rename(population = value) %>%
     rename(rank.population = rank) %>%
     mutate(country_link = str_replace_all(country_link, "\\.\\./", ""))
 }
 
-get_population_ranking()
+results <- get_population_ranking()
 
 # Question 2 --------------------------------------------------------------
 
@@ -71,16 +99,45 @@ get_population_ranking()
 
 #' Question 2: Retrieve Land Area
 #'
-#' @param country_link A character vector of one or more country_link urls
+#' @param country_link A character vector of one or more country_link urls.
 #'
-#' @return
-#' @export
+#' @return Character vector with retrieved land area information from urls.
 #'
 #' @examples
+#' 
+#' get_land_area <- function(country_link){
+#'  xpath <- str_c("//div[@id='","field-area","']/div[",2,"]/span[2]")
+#'  urls = str_c(base_url, country_link)
+#' 
+#'  results_area <- as.tibble(matrix(nrow = length(country_link), ncol = 1))
+#' 
+#'  for (i in seq_along(urls)) {
+#'   raw_html <- read_html(getURL(urls[i], .encoding = "UTF-8"))
+#'   results_area[i, 1] <- raw_html %>%
+#'     xml_find_all(xpath) %>%
+#'     as_list() %>% unlist()
+#'  }
+#'  return(results_area)
+#' }
+#' 
+#' results["land_area"] <- get_land_area(results$country_link)
+
 get_land_area <- function(country_link){
   xpath <- str_c("//div[@id='","field-area","']/div[",2,"]/span[2]")
-  #download the file from country_link and execute the xpath query
+  urls = str_c(base_url, country_link)
+  
+  results_area <- as.tibble(matrix(nrow = length(country_link), ncol = 1))
+  
+  for (i in seq_along(urls)) {
+    raw_html <- read_html(getURL(urls[i], .encoding = "UTF-8"))
+    results_area[i, 1] <- raw_html %>%
+      xml_find_all(xpath) %>%
+      as_list() %>% unlist()
+  }
+  return(results_area)
 }
+
+results["land_area"] <- get_land_area(results$country_link)
 
 # Question 3 --------------------------------------------------------------
 
@@ -94,14 +151,36 @@ get_land_area <- function(country_link){
 
 #' Question 3: Get Population Density
 #'
-#' @return
-#' @export
+#' @return Implicitly returns a results tibble with the added devision (population / land_area).
 #'
 #' @examples
+#' 
+#' get_population_density <- function(){
+#' results %>%
+#'   mutate(land_area = str_replace_all(land_area, " million", ",000,000"),
+#'          land_area = as.numeric(str_replace_all(land_area, "[^\\d]", "")),
+#'          population = as.numeric(str_replace_all(population, "[^\\d]", "")),
+#'          population_density = population / land_area)
+#' }
+#' 
+#' results <- get_population_density()
+
 get_population_density <- function(){
-  
+  results %>%
+    mutate(land_area = str_replace_all(land_area, " million", ",000,000"),
+           land_area = as.numeric(str_replace_all(land_area, "[^\\d]", "")),
+           population = as.numeric(str_replace_all(population, "[^\\d]", "")),
+           population_density = population / land_area)
 }
 
+results <- get_population_density()
+  
+# Note: we opted for not - again - retrieving the population and area information since we already
+# retrieved this in the previous two functions, which took a long time to do so. It can easily be
+# implemented in the current function though using:
+# results <- get_population_ranking()
+# results["land_area"] <- get_land_area(results$country_link)
+  
 # Question 4 --------------------------------------------------------------
 
 # Create a function called get_rankings that will scrape the overview of all the available rankings.
@@ -111,16 +190,52 @@ get_population_density <- function(){
 
 #' Question 4: Get All Provided Rankings
 #'
-#' @return
-#' @export
+#' @return Tibble with 2 added columns: characteristic, and characteristic_link.
 #'
 #' @examples
-get_rankings <- function(){
-  url <- "https://www.cia.gov/library/publications/the-world-factbook/docs/rankorderguide.html"
+#' 
+#' get_rankings <- function(){
+#'   xpath <- c("characteristic" = "//div[@class='field_label']/strong/a",
+#'              "characteristic_link" = "//div[@class='field_label']/strong/a/@@href")
+#'   url <- "https://www.cia.gov/library/publications/the-world-factbook/docs/rankorderguide.html"
+#'   raw_html <- read_html(getURL(url, .encoding = "UTF-8"))
+#'   ranking_results <- list()
+#'   
+#'   for (nm in names(xpath)) {
+#'     ranking_results[nm] <- raw_html %>%
+#'       xml_find_all(xpath[nm]) %>%
+#'       as_list() %>% unlist()
+#'   }
+#'   ranking_results %>%
+#'   as_tibble() %>%
+#'     mutate(characteristic = str_replace_all(characteristic, ":", ""),
+#'            characteristic = tolower(characteristic),
+#'            characteristic_link = str_replace_all(characteristic_link, "\\.\\./", ""))
+#' }
+#' 
+#' ranking_results <- get_rankings()
+
+get_rankings <- function() {
   xpath <- c("characteristic" = "//div[@class='field_label']/strong/a",
              "characteristic_link" = "//div[@class='field_label']/strong/a/@href")
-  #...
+  url <- "https://www.cia.gov/library/publications/the-world-factbook/docs/rankorderguide.html"
+  raw_html <- read_html(getURL(url, .encoding = "UTF-8"))
+  ranking_results <- list()
+
+  for (nm in names(xpath)) {
+    ranking_results[[nm]] <- raw_html %>%
+      xml_find_all(xpath[nm]) %>%
+      as_list() %>% unlist()
+  }
+
+  ranking_results %>%
+    as_tibble() %>%
+    mutate(characteristic = str_replace_all(characteristic, ":", ""),
+           characteristic = tolower(characteristic),
+           characteristic_link = str_replace_all(characteristic_link, "\\.\\./", ""))
 }
+
+ranking_results <- get_rankings()
 
 # Question 5 --------------------------------------------------------------
 
@@ -135,17 +250,61 @@ get_rankings <- function(){
 #' @param url The url of the ranking
 #' @param characteristic What this ranking is about
 #'
-#' @return
-#' @export
+#' @return Tibble with 4 added columns: country_link, country, population, and rank.population.
 #'
 #' @examples
+#' 
+#' get_ranking <- function(url = "fields/335rank.html", characteristic = "population"){
+#'   xpath_expressions <- c("country_link" = "//td[@class='region']/a/@@href",
+#'                          "country" = "//td[@class='region']/a",
+#'                          "value" = "//tr/td[3]",
+#'                          "rank" = "//tr/td[1]")
+#'   url <- str_c(base_url, url)
+#'   raw_html <- read_html(getURL(url, .encoding = "UTF-8"))
+#'   gener_results <- list()
+#'   
+#'   for (nm in names(xpath_expressions)) {
+#'     gener_results[[nm]] <- raw_html %>%
+#'       xml_find_all(xpath_expressions[nm]) %>%
+#'       as_list() %>% unlist()
+#'   }
+#'   
+#'   gener_results %>%
+#'     as_tibble() %>%
+#'     rename(!!characteristic := value,
+#'            !!str_c("rank.", characteristic) := rank) %>%
+#'     mutate(country_link = str_replace_all(country_link, "\\.\\./", ""))
+#' }
+#' 
+#' get_ranking()
+
 get_ranking <- function(url = "fields/335rank.html", characteristic = "population"){
   xpath_expressions <- c("country_link" = "//td[@class='region']/a/@href",
                          "country" = "//td[@class='region']/a",
                          "value" = "//tr/td[3]",
                          "rank" = "//tr/td[1]")
-  #...
+  url <- str_c(base_url, url)
+  raw_html <- read_html(getURL(url, .encoding = "UTF-8"))
+  gener_results <- list()
+  
+  for (nm in names(xpath_expressions)) {
+    gener_results[[nm]] <- raw_html %>%
+      xml_find_all(xpath_expressions[nm]) %>%
+      as_list() %>% unlist()
+  }
+  
+  gener_results %>%
+    as_tibble() %>%
+    rename(!!characteristic := value,
+           !!str_c("rank.", characteristic) := rank) %>%
+    mutate(country_link = str_replace_all(country_link, "\\.\\./", ""))
 }
+
+get_ranking()
+
+#Now try it out when specifying a parameter:
+
+get_ranking(url = "fields/220rank.html", characteristic = "unemployment rate")
 
 #' Question 5 - Part 2: Get Country Characteristic
 #'
@@ -153,13 +312,43 @@ get_ranking <- function(url = "fields/335rank.html", characteristic = "populatio
 #' @param xpath_field_id 
 #' @param item 
 #'
-#' @return
-#' @export
+#' @return Character vector with retrieved land area information from urls.
 #'
 #' @examples
+#' 
+#' get_country_characteristic <- function(country_link, xpath_field_id = "field-area", item = 2){
+#'   xpath <- str_c("//div[@id='",xpath_field_id,"']/div[",item,"]/span[2]")
+#'   urls = str_c(base_url, country_link)
+#'   
+#'   dyn_results <- as.tibble(matrix(nrow = length(country_link), ncol = 1))
+#'   
+#'   for (i in seq_along(urls)) {
+#'     raw_html <- read_html(getURL(urls[i], .encoding = "UTF-8"))
+#'     dyn_results[i, 1] <- raw_html %>%
+#'       xml_find_all(xpath) %>%
+#'       as_list() %>% unlist()
+#'   }
+#'   return(dyn_results)
+#' }
+#' 
+#' get_country_characteristic("geos/pk.html", item = 3)
+
 get_country_characteristic <- function(country_link, xpath_field_id = "field-area", item = 2){
-  #update the xpath and use similar code other than that
+  xpath <- str_c("//div[@id='",xpath_field_id,"']/div[",item,"]/span[2]")
+  urls = str_c(base_url, country_link)
+  
+  dyn_results <- as.tibble(matrix(nrow = length(country_link), ncol = 1))
+  
+  for (i in seq_along(urls)) {
+    raw_html <- read_html(getURL(urls[i], .encoding = "UTF-8"))
+    dyn_results[i, 1] <- raw_html %>%
+      xml_find_all(xpath) %>%
+      as_list() %>% unlist()
+  }
+  return(dyn_results)
 }
+  
+get_country_characteristic("geos/pk.html", item = 3) # Example Pakistans water sq km
 
 # Question 6 --------------------------------------------------------------
 
@@ -171,10 +360,38 @@ get_country_characteristic <- function(country_link, xpath_field_id = "field-are
 #'
 #' @param rankings Rankings from get_rankings (or a selection thereof)
 #'
-#' @return
-#' @export
+#' @return List(s) for the requested characteristic, joined if more than one
 #'
 #' @examples
+#' 
+#' combine_rankings <- function(rankings){
+#' 
+#' res <- list()
+#' 
+#' for(i in 1:nrow(rankings)) {
+#'   char <- rankings[i,]$characteristic
+#'   link <- rankings[i,]$characteristic_link
+#'   ranking <- get_ranking(url = link, characteristic = char)
+#'   res[[char]] <- select(ranking, country, char)
+#' }
+#' 
+#' join_all(res, by = "country", type = "full")
+#' }
+#' 
+#' combine_rankings(get_rankings()[1:10,])
+
 combine_rankings <- function(rankings){
   
+  res <- list()
+  
+  for(i in 1:nrow(rankings)) {
+    char <- rankings[i,]$characteristic
+    link <- rankings[i,]$characteristic_link
+    ranking <- get_ranking(url = link, characteristic = char)
+    res[[char]] <- select(ranking, country, char)
+  }
+  
+  join_all(res, by = "country", type = "full")
 }
+
+combined_lists <- combine_rankings(get_rankings()[1:10,]) # First 10 to check (max. is 77, i.e. all characteristics)
